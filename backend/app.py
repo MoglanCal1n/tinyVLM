@@ -1,54 +1,40 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from PIL import Image
-import io, base64
-import torch
-from transformers import AutoModelForCausalLM
+import io, base64, os
+from huggingface_hub import InferenceClient
+from dotenv import load_dotenv
+
+load_dotenv()
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 app = Flask(__name__)
 CORS(app)
 
-print("🔄 Loading model...")
-
-
-model = AutoModelForCausalLM.from_pretrained(
-    "vikhyatk/moondream2",
-    trust_remote_code=True,
-    dtype=torch.bfloat16,
-    device_map="cpu", # "cuda" on Nvidia GPUs
-)
-print("✅ Model loaded successfully!")
+client = InferenceClient(token=HF_TOKEN)
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "Backend Flask running"})
+    return jsonify({"message": "Backend Flask running ✅"})
 
 @app.route("/process-image", methods=["POST"])
 def process_image():
     try:
         data = request.get_json()
         image_data = data.get("image")
-
         if not image_data:
             return jsonify({"error": "No image received"}), 400
 
-        # Decodează imaginea din base64
         image_bytes = base64.b64decode(image_data.split(",")[1])
-        image = Image.open(io.BytesIO(image_bytes))
 
-        # Optionally set sampling settings
-        settings = {"temperature": 0.5, "max_tokens": 768, "top_p": 0.3}
-
-        # Generate a short caption
-        short_result = model.caption(
-            image, 
-            length="short", 
-            settings=settings
+        result = client.image_to_text(
+            model="vikhyatk/moondream2",
+            data=image_bytes
         )
 
-        return jsonify({"caption": str(short_result)})
+        return jsonify({"caption": str(result)})
     except Exception as e:
-        print(e)
+        print("❌ Error:", e)
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
