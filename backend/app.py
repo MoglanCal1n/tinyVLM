@@ -25,7 +25,7 @@ def process_image():
 
         result = client.text_generation(
             model="vikhyatk/moondream2",
-            inputs=image_bytes
+            prompts=image_bytes
         )
 
         return jsonify({"caption": str(result)})
