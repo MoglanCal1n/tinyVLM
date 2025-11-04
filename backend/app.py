@@ -8,12 +8,20 @@ from transformers import AutoModelForCausalLM
 app = Flask(__name__)
 CORS(app)
 
+print("🔄 Loading model...")
+
+
 model = AutoModelForCausalLM.from_pretrained(
     "vikhyatk/moondream2",
     trust_remote_code=True,
     dtype=torch.bfloat16,
-    device_map="cuda", # "cuda" on Nvidia GPUs
+    device_map="cpu", # "cuda" on Nvidia GPUs
 )
+print("✅ Model loaded successfully!")
+
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "Backend Flask running"})
 
 @app.route("/process-image", methods=["POST"])
 def process_image():
