@@ -13,10 +13,6 @@ CORS(app)
 
 client = InferenceClient(token=HF_TOKEN)
 
-@app.route("/", methods=["GET"])
-def home():
-    return jsonify({"message": "Backend Flask running ✅"})
-
 @app.route("/process-image", methods=["POST"])
 def process_image():
     try:
@@ -27,9 +23,9 @@ def process_image():
 
         image_bytes = base64.b64decode(image_data.split(",")[1])
 
-        result = client.image_to_text(
+        result = client.text_generation(
             model="vikhyatk/moondream2",
-            data=image_bytes
+            inputs=image_bytes
         )
 
         return jsonify({"caption": str(result)})
